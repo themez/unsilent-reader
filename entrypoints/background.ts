@@ -129,6 +129,11 @@ export default defineBackground(() => {
             title: 'Read page with Unsilent',
             contexts: ['page'],
           })
+          browser.contextMenus.create({
+            id: 'unsilent-read-from-here',
+            title: '从此位置朗读',
+            contexts: ['page', 'selection'],
+          })
         } catch {}
       })
     } catch {}
@@ -213,10 +218,11 @@ export default defineBackground(() => {
   }
 
   browser.contextMenus.onClicked.addListener(async (info, tab) => {
-    if (info.menuItemId !== 'unsilent-read-page') return
+    if (info.menuItemId !== 'unsilent-read-page' && info.menuItemId !== 'unsilent-read-from-here') return
     const tabId = tab && typeof tab.id === 'number' ? tab.id : undefined
     if (tabId != null) {
-      try { await browser.tabs.sendMessage(tabId, { type: 'START_READ_ALOUD_PAGE' }) } catch {}
+      const type = info.menuItemId === 'unsilent-read-from-here' ? 'START_READ_ALOUD_FROM_CONTEXT' : 'START_READ_ALOUD_PAGE'
+      try { await browser.tabs.sendMessage(tabId, { type }) } catch {}
     }
   })
 

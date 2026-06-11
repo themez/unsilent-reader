@@ -31,6 +31,13 @@ export default defineContentScript({
       if ((message as any).type === 'START_READ_ALOUD_PAGE') {
         try { window.dispatchEvent(new CustomEvent('bf-start-read-aloud')) } catch {}
       }
+      if ((message as any).type === 'START_READ_ALOUD_FROM_CONTEXT') {
+        try {
+          window.dispatchEvent(new CustomEvent('bf-read-aloud-command', {
+            detail: { command: 'start-from-context' },
+          }))
+        } catch {}
+      }
     })
   },
 })

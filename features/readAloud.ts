@@ -85,6 +85,7 @@ let currentFallbackReason = ''
 let browserFallbackActive = false
 let pendingRestartTimer: number | null = null
 let lastHighlightedToken: TextToken | null = null
+let lastContextMenuTokenStart: number | null = null
 let playbackGeneration = 0
 let aiSpeechCache = new Map<number, Promise<TtsReadingResponse>>()
 let ttsDebugSeq = 0
@@ -355,6 +356,7 @@ function clearHighlight(): void {
     const layer = document.getElementById(HIGHLIGHT_LAYER_ID)
     if (layer) layer.replaceChildren()
     lastHighlightedToken = null
+    lastContextMenuTokenStart = null
   } catch {}
 }
 
@@ -406,6 +408,12 @@ function findSentenceIndexAt(index: number): number {
   return Math.max(0, Math.min(lo, doc.sentences.length - 1))
 }
 
+function isIndexInCurrentSentence(index: number): boolean {
+  const doc = currentDoc
+  if (!doc || doc.sentences.length === 0) return false
+  return findSentenceIndexAt(index) === findSentenceIndexAt(currentIndex)
+}
+
 function findTokenForNodeOffset(node: Text, offset: number): TextToken | null {
   const doc = currentDoc
   if (!doc) return null
@@ -441,6 +449,26 @@ function getTextPointFromMouseEvent(event: MouseEvent): { node: Text; offset: nu
   return null
 }
 
+function appendHighlightMark(layer: HTMLElement, rect: DOMRect, options: {
+  insetX: number
+  insetY: number
+  radius: string
+  background: string
+  boxShadow?: string
+}): void {
+  const mark = document.createElement('div')
+  mark.style.position = 'fixed'
+  mark.style.left = `${rect.left - options.insetX}px`
+  mark.style.top = `${rect.top - options.insetY}px`
+  mark.style.width = `${rect.width + options.insetX * 2}px`
+  mark.style.height = `${rect.height + options.insetY * 2}px`
+  mark.style.borderRadius = options.radius
+  mark.style.background = options.background
+  mark.style.mixBlendMode = 'multiply'
+  if (options.boxShadow) mark.style.boxShadow = options.boxShadow
+  layer.appendChild(mark)
+}
+
 function highlightAt(index: number, force = false): void {
   const token = findToken(index)
   if (!token || (!force && token === lastHighlightedToken)) return
@@ -448,27 +476,48 @@ function highlightAt(index: number, force = false): void {
   currentIndex = token.start
 
   try {
+    const layer = getHighlightLayer()
+    layer.replaceChildren()
+
+    const paused = currentStatus === 'paused'
+    const sentence = currentDoc?.sentences[findSentenceIndexAt(token.start)]
+    if (sentence) {
+      const sentenceTokens = currentDoc?.tokens.filter((item) => item.start < sentence.end && item.end > sentence.start) || []
+      const firstSentenceToken = sentenceTokens[0]
+      const lastSentenceToken = sentenceTokens[sentenceTokens.length - 1]
+      if (firstSentenceToken && lastSentenceToken) {
+        const sentenceRange = document.createRange()
+        sentenceRange.setStart(firstSentenceToken.node, firstSentenceToken.nodeStart)
+        sentenceRange.setEnd(lastSentenceToken.node, lastSentenceToken.nodeEnd)
+        const sentenceRects = Array.from(sentenceRange.getClientRects()).filter((rect) => rect.width > 0 && rect.height > 0)
+        sentenceRange.detach()
+        for (const rect of sentenceRects.slice(0, 16)) {
+          appendHighlightMark(layer, rect, {
+            insetX: 2,
+            insetY: 2,
+            radius: '5px',
+            background: paused ? 'rgba(148, 163, 184, 0.20)' : 'rgba(125, 211, 252, 0.20)',
+          })
+        }
+      }
+    }
+
     const range = document.createRange()
     range.setStart(token.node, token.nodeStart)
     range.setEnd(token.node, token.nodeEnd)
     const rects = Array.from(range.getClientRects()).filter((rect) => rect.width > 0 && rect.height > 0)
     range.detach()
 
-    const layer = getHighlightLayer()
-    layer.replaceChildren()
-
     for (const rect of rects.slice(0, 4)) {
-      const mark = document.createElement('div')
-      mark.style.position = 'fixed'
-      mark.style.left = `${rect.left - 2}px`
-      mark.style.top = `${rect.top - 1}px`
-      mark.style.width = `${rect.width + 4}px`
-      mark.style.height = `${rect.height + 2}px`
-      mark.style.borderRadius = '4px'
-      mark.style.background = 'rgba(20, 184, 166, 0.28)'
-      mark.style.boxShadow = '0 0 0 1px rgba(15, 118, 110, 0.14), 0 6px 18px rgba(20, 184, 166, 0.12)'
-      mark.style.mixBlendMode = 'multiply'
-      layer.appendChild(mark)
+      appendHighlightMark(layer, rect, {
+        insetX: 2,
+        insetY: 1,
+        radius: '4px',
+        background: paused ? 'rgba(100, 116, 139, 0.34)' : 'rgba(20, 184, 166, 0.34)',
+        boxShadow: paused
+          ? '0 0 0 1px rgba(100, 116, 139, 0.16)'
+          : '0 0 0 1px rgba(15, 118, 110, 0.16), 0 6px 18px rgba(20, 184, 166, 0.12)',
+      })
     }
 
   } catch {}
@@ -968,6 +1017,29 @@ function startReading(): void {
   void speakChunk(0)
 }
 
+function startReadingFromIndex(index: number): void {
+  stopSpeech(false)
+  currentStatus = 'loading'
+  currentDoc = null
+  currentIndex = 0
+  currentMode = 'ai'
+  currentBackendUrl = ''
+  currentFallbackReason = ''
+  browserFallbackActive = false
+  emitState()
+
+  const doc = extractReadingDocument()
+  if (!doc) {
+    currentStatus = 'error'
+    emitState('No readable article text found on this page.')
+    return
+  }
+
+  currentDoc = doc
+  aiSpeechCache = new Map()
+  seekToIndex(index)
+}
+
 function pauseReading(): void {
   try {
     if (currentMode === 'ai' && currentAudio) {
@@ -976,6 +1048,7 @@ function pauseReading(): void {
       speechSynthesis.pause()
     }
     currentStatus = 'paused'
+    highlightAt(currentIndex, true)
     emitState()
   } catch {}
 }
@@ -988,6 +1061,7 @@ function resumeReading(): void {
       speechSynthesis.resume()
     }
     currentStatus = 'playing'
+    highlightAt(currentIndex, true)
     emitState()
   } catch {}
 }
@@ -1030,6 +1104,7 @@ function skipSentence(delta: number): void {
 function handleReaderClick(event: MouseEvent): void {
   if (!currentDoc || currentStatus === 'idle' || currentStatus === 'error') return
   try {
+    if (currentStatus === 'loading') return
     const target = event.target as Element | null
     if (!target || target.closest(`#${CONTROL_ROOT_ID}, #${HIGHLIGHT_LAYER_ID}, [data-bf-translation], #bf-translate-modal`)) return
     if (isElementHidden(target)) return
@@ -1037,9 +1112,27 @@ function handleReaderClick(event: MouseEvent): void {
     if (!point) return
     const token = findTokenForNodeOffset(point.node, point.offset)
     if (!token) return
+    if (!isIndexInCurrentSentence(token.start)) return
     event.preventDefault()
     event.stopPropagation()
-    seekToIndex(token.start)
+    if (currentStatus === 'paused') resumeReading()
+    else pauseReading()
+  } catch {}
+}
+
+function handleReaderContextMenu(event: MouseEvent): void {
+  lastContextMenuTokenStart = null
+  try {
+    if (currentStatus === 'error') return
+    const target = event.target as Element | null
+    if (!target || target.closest(`#${CONTROL_ROOT_ID}, #${HIGHLIGHT_LAYER_ID}, [data-bf-translation], #bf-translate-modal`)) return
+    if (isElementHidden(target)) return
+    if (!currentDoc) currentDoc = extractReadingDocument()
+    if (!currentDoc) return
+    const point = getTextPointFromMouseEvent(event)
+    if (!point) return
+    const token = findTokenForNodeOffset(point.node, point.offset)
+    if (token) lastContextMenuTokenStart = token.start
   } catch {}
 }
 
@@ -1086,6 +1179,11 @@ function setRate(rate: number): void {
 
 function handleCommand(command: string, payload?: any): void {
   if (command === 'start') startReading()
+  else if (command === 'start-from-context') {
+    if (typeof lastContextMenuTokenStart === 'number') seekToIndex(lastContextMenuTokenStart)
+    else startReading()
+  }
+  else if (command === 'start-from-index') startReadingFromIndex(Number(payload?.index || 0))
   else if (command === 'pause') pauseReading()
   else if (command === 'resume') resumeReading()
   else if (command === 'stop') stopSpeech(true)
@@ -1108,6 +1206,7 @@ export function attachReadAloud(): void {
     })
     window.addEventListener('beforeunload', () => stopSpeech(false))
     window.addEventListener('click', handleReaderClick, true)
+    window.addEventListener('contextmenu', handleReaderContextMenu, true)
     window.addEventListener('keydown', handleReaderKeydown, true)
     window.addEventListener('resize', () => {
       if (lastHighlightedToken) highlightAt(lastHighlightedToken.start, true)
