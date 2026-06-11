@@ -1,0 +1,23 @@
+{
+  "name": "unsilent-reader-server",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "NEXT_DIST_DIR=.next-dev next dev --turbopack --port 3000",
+    "build": "NEXT_DIST_DIR=.next-build next build",
+    "start": "NEXT_DIST_DIR=.next-build next start --port 3000",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "15.5.9",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  },
+  "packageManager": "pnpm@10.30.2"
+}
