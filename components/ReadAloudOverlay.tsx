@@ -1,4 +1,4 @@
-import { Bug, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, SkipBack, SkipForward, Trash2, Volume2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Logs, Pause, Play, SkipBack, SkipForward, Trash2, Volume2, X } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { useEffect, useState } from 'react'
 
@@ -250,14 +250,14 @@ export default function ReadAloudOverlay() {
             </button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <button
               type="button"
               aria-label="Previous section"
               title="Previous section"
               onClick={() => sendCommand('previous')}
               disabled={isLoading || isError}
-              style={{ ...iconButtonStyle(false), opacity: isLoading || isError ? 0.45 : 1 }}
+              style={{ ...iconButtonStyle(false), width: 28, opacity: isLoading || isError ? 0.45 : 1 }}
             >
               <SkipBack size={16} />
             </button>
@@ -277,7 +277,7 @@ export default function ReadAloudOverlay() {
               title={isPlaying ? 'Pause' : 'Play'}
               onClick={() => sendCommand(isPlaying ? 'pause' : 'resume')}
               disabled={isLoading || isError}
-              style={{ ...iconButtonStyle(true), width: 40, opacity: isLoading || isError ? 0.45 : 1 }}
+              style={{ ...iconButtonStyle(true), width: 36, opacity: isLoading || isError ? 0.45 : 1 }}
             >
               {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
             </button>
@@ -297,20 +297,11 @@ export default function ReadAloudOverlay() {
               title="Next section"
               onClick={() => sendCommand('next')}
               disabled={isLoading || isError}
-              style={{ ...iconButtonStyle(false), opacity: isLoading || isError ? 0.45 : 1 }}
+              style={{ ...iconButtonStyle(false), width: 28, opacity: isLoading || isError ? 0.45 : 1 }}
             >
               <SkipForward size={16} />
             </button>
-            <button
-              type="button"
-              aria-label="Restart page reading"
-              title="Restart page reading"
-              onClick={() => sendCommand('start')}
-              style={iconButtonStyle(false)}
-            >
-              <RotateCcw size={15} />
-            </button>
-            <label style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7, color: '#475569', fontSize: 12 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#475569', fontSize: 12, minWidth: 0 }}>
               <span>{state.rate.toFixed(1)}x</span>
               <input
                 aria-label="Reading speed"
@@ -321,7 +312,8 @@ export default function ReadAloudOverlay() {
                 value={state.rate}
                 onChange={(event) => sendCommand('rate', { rate: Number(event.currentTarget.value) })}
                 style={{
-                  width: 78,
+                  width: 70,
+                  minWidth: 0,
                   accentColor: '#0f766e',
                 }}
               />
@@ -329,11 +321,11 @@ export default function ReadAloudOverlay() {
             <button
               type="button"
               aria-label="Toggle request debug"
-              title="Toggle request debug"
+              title="TTS request log"
               onClick={() => setShowDebug((value) => !value)}
               style={{ ...iconButtonStyle(showDebug), width: 28, height: 28 }}
             >
-              <Bug size={14} />
+              <Logs size={14} />
             </button>
           </div>
 

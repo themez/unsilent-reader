@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Unsilent Reader Showcase</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #d8e2df;
+        --teal: #0f766e;
+        --teal-bright: #14b8a6;
+        --sky-mark: rgba(125, 211, 252, 0.24);
+        --word-mark: rgba(20, 184, 166, 0.38);
+        --paper: #fffdf8;
+        --chrome: #f6f8fb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        width: 1280px;
+        height: 800px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #f4f8f7 0%, #fbf7f0 55%, #eef7fb 100%);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: 0;
+      }
+
+      .frame {
+        position: relative;
+        width: 1128px;
+        height: 708px;
+        margin: 46px auto;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 8px;
+        background: var(--paper);
+        box-shadow: 0 30px 90px rgba(15, 23, 42, 0.16), 0 4px 18px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+      }
+
+      .browser-bar {
+        height: 58px;
+        display: grid;
+        grid-template-columns: 120px 1fr 330px;
+        align-items: center;
+        gap: 18px;
+        padding: 0 26px;
+        background: #101827;
+        color: #dbeafe;
+      }
+
+      .lights {
+        display: flex;
+        gap: 10px;
+      }
+
+      .light {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+
+      .red { background: #fb7185; }
+      .yellow { background: #fbbf24; }
+      .green { background: #34d399; }
+
+      .address {
+        height: 28px;
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.10);
+        color: #cbd5e1;
+        font-size: 12px;
+      }
+
+      .extension-chip {
+        justify-self: end;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        height: 30px;
+        padding: 0 12px;
+        border-radius: 8px;
+        background: rgba(20, 184, 166, 0.16);
+        color: #ccfbf1;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .wave-icon {
+        width: 18px;
+        height: 18px;
+        display: grid;
+        grid-template-columns: repeat(4, 3px);
+        align-items: center;
+        gap: 2px;
+      }
+
+      .wave-icon span {
+        display: block;
+        width: 3px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .wave-icon span:nth-child(1) { height: 8px; }
+      .wave-icon span:nth-child(2) { height: 14px; }
+      .wave-icon span:nth-child(3) { height: 11px; }
+      .wave-icon span:nth-child(4) { height: 17px; }
+
+      .page {
+        position: relative;
+        height: calc(100% - 58px);
+        padding: 58px 72px 68px;
+      }
+
+      .article {
+        width: 710px;
+      }
+
+      .kicker {
+        margin: 0 0 18px;
+        color: var(--teal);
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        width: 650px;
+        margin: 0 0 18px;
+        font-size: 38px;
+        line-height: 1.12;
+        font-weight: 820;
+        letter-spacing: 0;
+      }
+
+      .meta {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 34px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      p {
+        margin: 0 0 22px;
+        color: #253247;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 22px;
+        line-height: 1.72;
+      }
+
+      .sentence-mark {
+        border-radius: 5px;
+        background: var(--sky-mark);
+        box-shadow: 0 0 0 2px var(--sky-mark);
+      }
+
+      .word-mark {
+        border-radius: 4px;
+        background: var(--word-mark);
+        box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.28), 0 8px 22px rgba(20, 184, 166, 0.18);
+      }
+
+      .side-note {
+        position: absolute;
+        top: 164px;
+        right: 72px;
+        width: 260px;
+        padding: 18px 18px 16px;
+        border-left: 3px solid var(--teal-bright);
+        background: #f7fbfa;
+        color: #334155;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .side-note strong {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--ink);
+        font-size: 14px;
+      }
+
+      .reader {
+        position: absolute;
+        right: 64px;
+        bottom: 24px;
+        width: 360px;
+        border: 1px solid rgba(15, 23, 42, 0.10);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18), 0 3px 10px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+        backdrop-filter: blur(14px);
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .progress {
+        height: 3px;
+        background: #dbe4e2;
+      }
+
+      .progress div {
+        width: 62%;
+        height: 100%;
+        background: var(--teal-bright);
+      }
+
+      .reader-body {
+        display: grid;
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .reader-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .reader-avatar {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: #ecfeff;
+        color: var(--teal);
+      }
+
+      .reader-copy {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .reader-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .reader-status {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .reader-source {
+        margin-top: 2px;
+        overflow: hidden;
+        color: var(--teal);
+        font-size: 11px;
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .control-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .button {
+        width: 28px;
+        height: 32px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(15, 23, 42, 0.10);
+        border-radius: 8px;
+        background: #fff;
+        color: #334155;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .button.small {
+        width: 28px;
+      }
+
+      .button.play {
+        width: 36px;
+        background: var(--teal);
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(15, 118, 110, 0.22);
+      }
+
+      .speed {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #475569;
+        font-size: 12px;
+      }
+
+      .slider {
+        position: relative;
+        width: 70px;
+        min-width: 0;
+        height: 4px;
+        border-radius: 999px;
+        background: #d7e1df;
+      }
+
+      .slider::before {
+        content: "";
+        position: absolute;
+        inset: 0 34px 0 0;
+        border-radius: 999px;
+        background: var(--teal);
+      }
+
+      .slider::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 40px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--teal);
+        transform: translateY(-50%);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+      }
+
+      .debug {
+        display: grid;
+        gap: 7px;
+        padding-top: 9px;
+        border-top: 1px solid rgba(15, 23, 42, 0.08);
+      }
+
+      .debug-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .debug-title {
+        color: #334155;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .debug-count {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .request {
+        padding: 7px 8px;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 7px;
+        background: #f8fafc;
+      }
+
+      .request-line {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .request-source {
+        color: var(--teal);
+        font-weight: 800;
+      }
+
+      .request-time {
+        color: #64748b;
+      }
+
+      .request-preview {
+        margin-top: 3px;
+        overflow: hidden;
+        color: #475569;
+        font-size: 11px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .popup {
+        width: 360px;
+        display: grid;
+        gap: 14px;
+        padding: 14px;
+        border: 1px solid rgba(15, 23, 42, 0.10);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.16);
+      }
+
+      .popup-shot .frame {
+        display: grid;
+        place-items: center;
+      }
+
+      .popup-title {
+        font-size: 16px;
+        font-weight: 760;
+      }
+
+      .popup-subtitle {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .primary-action {
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: var(--teal);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 760;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field-label {
+        color: #334155;
+        font-size: 13px;
+        font-weight: 680;
+      }
+
+      .input, .select {
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #fff;
+        color: #0f172a;
+        font-size: 13px;
+      }
+
+      .input.muted {
+        color: #94a3b8;
+      }
+
+      .voice-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+      }
+
+      .secondary-action {
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #fff;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .disclosure {
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #fff;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .status-line {
+        min-height: 16px;
+        color: var(--teal);
+        font-size: 12px;
+      }
+
+      .caption {
+        position: absolute;
+        left: 72px;
+        bottom: 42px;
+        color: #475569;
+        font-size: 13px;
+      }
+
+      body[data-shot="popup"] .reader-shot {
+        display: none;
+      }
+
+      body:not([data-shot="popup"]) .popup-shot {
+        display: none;
+      }
+    </style>
+  </head>
+  <body data-shot="reader">
+    <section class="reader-shot">
+      <div class="frame">
+        <div class="browser-bar">
+          <div class="lights">
+            <span class="light red"></span>
+            <span class="light yellow"></span>
+            <span class="light green"></span>
+          </div>
+          <div class="address">readable.example/article/the-case-for-slower-reading</div>
+          <div class="extension-chip">
+            <span class="wave-icon" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+            Unsilent Reader active
+          </div>
+        </div>
+        <main class="page">
+          <article class="article">
+            <div class="kicker">Deep Reading</div>
+            <h1>Listening makes dense web articles easier to finish.</h1>
+            <div class="meta">
+              <span>12 min read</span>
+              <span>AI voice enabled</span>
+              <span>Word tracking on</span>
+            </div>
+            <p>
+              Most people do not need another queue of saved tabs.
+              <span class="sentence-mark">They need a way to keep moving through long paragraphs while their eyes stay anchored to the exact
+              <span class="word-mark">word</span> being spoken.</span>
+            </p>
+            <p>
+              Unsilent Reader extracts the readable page, generates speech paragraph by paragraph, and keeps the current sentence visible without taking over the page.
+            </p>
+            <p>
+              Click the current sentence to pause and resume, or use the context menu when you want to restart from a different point.
+            </p>
+          </article>
+          <aside class="side-note">
+            <strong>Reading in progress</strong>
+            Sentence-level context stays softly marked, while the current word receives the stronger highlight used by the extension runtime.
+          </aside>
+          <div class="reader">
+            <div class="progress"><div></div></div>
+            <div class="reader-body">
+              <div class="reader-top">
+                <div class="reader-avatar">
+                  <span class="wave-icon" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+                </div>
+                <div class="reader-copy">
+                  <div class="reader-title">Dense articles are easier to finish.</div>
+                  <div class="reader-status">Reading aloud</div>
+                  <div class="reader-source">AI voice - api.elevenlabs.io</div>
+                </div>
+                <div class="button" title="Close reader">x</div>
+              </div>
+              <div class="control-row">
+                <div class="button">|&lt;</div>
+                <div class="button small">&lt;</div>
+                <div class="button play">||</div>
+                <div class="button small">&gt;</div>
+                <div class="button">&gt;|</div>
+                <div class="speed">
+                  <span>1.1x</span>
+                  <span class="slider"></span>
+                </div>
+                <div class="button small" title="TTS request log">=</div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </section>
+
+    <section class="popup-shot">
+      <div class="frame">
+        <div class="popup">
+          <div>
+            <div class="popup-title">Unsilent Reader</div>
+            <div class="popup-subtitle">AI read aloud with word tracking.</div>
+          </div>
+          <div class="primary-action">Read this page</div>
+          <div class="field">
+            <div class="field-label">ElevenLabs API Key</div>
+            <div class="input muted">sk_...</div>
+          </div>
+          <div class="field">
+            <div class="field-label">ElevenLabs Voice</div>
+            <div class="voice-row">
+              <div class="select">Rachel - female, american</div>
+              <div class="secondary-action">Load</div>
+            </div>
+            <div class="input">21m00Tcm4TlvDq8ikWAM</div>
+          </div>
+          <div class="disclosure">
+            <span>Custom API host</span>
+            <span>Show</span>
+          </div>
+          <div class="status-line">Saved</div>
+        </div>
+        <div class="caption">Extension popup settings before starting read-aloud.</div>
+      </div>
+    </section>
+    <script>
+      const shot = new URLSearchParams(window.location.search).get('shot');
+      if (shot === 'popup') document.body.dataset.shot = 'popup';
+    </script>
+  </body>
+</html>

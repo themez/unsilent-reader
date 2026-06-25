@@ -4,6 +4,37 @@ Unsilent Reader is a Chrome extension that turns readable web pages into a focus
 
 The extension can use a user-provided ElevenLabs API key directly from the browser, or an optional custom API host for private deployments.
 
+中文说明见 [README.zh-CN.md](README.zh-CN.md).
+
+## Install
+
+Install Unsilent Reader from the Chrome Web Store:
+
+[**Add to Chrome**](https://chromewebstore.google.com/detail/unsilent-reader/ihkmfdcpgjalneedeknedemoaghojhbl)
+
+After installation:
+
+1. Open a readable web page.
+2. Click the Unsilent Reader extension icon.
+3. Configure an ElevenLabs API key, or use a custom compatible API host.
+4. Click "Read this page" to start the floating read-aloud player.
+
+## Interface Preview
+
+![Unsilent Reader interface preview](store-assets/screenshot-1280x800.png)
+
+Unsilent Reader adds a compact floating player to the current page. Spoken words are highlighted in place, and the player gives quick access to play/pause, sentence navigation, word seeking, speed control, and request inspection.
+
+![Unsilent Reader popup settings](store-assets/screenshot-popup-1280x800.png)
+
+The screenshots are generated from [store-assets/showcase.html](store-assets/showcase.html):
+
+```bash
+node scripts/render-store-assets.mjs
+```
+
+The render script uses the local Chrome channel by default. Set `UNSILENT_PLAYWRIGHT_CHANNEL=chromium` if your Playwright setup uses the bundled Chromium browser instead.
+
 ## Features
 
 - Read aloud readable page content from the active tab.
